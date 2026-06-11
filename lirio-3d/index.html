@@ -32,16 +32,10 @@
     z-index: 10;
     text-shadow: 0 2px 12px rgba(0,0,0,0.6);
   }
-  .titulo h1 {
-    font-size: clamp(1.4rem, 3.5vw, 2.4rem);
-    font-weight: normal;
-    letter-spacing: 0.12em;
-  }
   .titulo p {
-    margin-top: 10px;
-    font-size: clamp(1rem, 2.2vw, 1.35rem);
+    font-size: clamp(1.5rem, 3.5vw, 2.3rem);
     font-style: italic;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     color: #f7d2e0;
   }
 
@@ -62,7 +56,6 @@
 <body>
 
 <div class="titulo">
-  <h1>🌸 Ramalhete de Lírios Rosa 🌸</h1>
   <p>Para você Livia</p>
 </div>
 
@@ -641,13 +634,13 @@ function criarMosquitinhos(grupo, centros) {
   const dummy = new THREE.Object3D();
 
   for (const centro of centros) {
-    const n = Math.floor(rnd(9, 16));
+    const n = Math.floor(rnd(14, 24));
     const base = centro.clone().add(new THREE.Vector3(0, -0.45, 0));
     for (let i = 0; i < n; i++) {
       const ponta = centro.clone().add(new THREE.Vector3(
-        rnd(-0.4, 0.4), rnd(-0.25, 0.45), rnd(-0.4, 0.4)
+        rnd(-0.45, 0.45), rnd(-0.25, 0.5), rnd(-0.45, 0.45)
       ));
-      transformes.push({ p: ponta, s: rnd(0.022, 0.045) });
+      transformes.push({ p: ponta, s: rnd(0.035, 0.065) });
       talos.push({ de: base, ate: ponta });
     }
   }
@@ -744,7 +737,7 @@ function adicionarBotao(posicao, eixo) {
 
 // flor central quase voltada para cima (leve inclinação natural)
 adicionarFlor(
-  new THREE.Vector3(rnd(-0.15, 0.15), rnd(1.6, 1.85), rnd(-0.15, 0.15)),
+  new THREE.Vector3(rnd(-0.15, 0.15), rnd(1.4, 1.6), rnd(-0.15, 0.15)),
   new THREE.Vector3(rnd(-0.12, 0.12), 1, rnd(-0.12, 0.12))
 );
 
@@ -762,20 +755,20 @@ for (let k = 0; k < 4; k++) {
   adicionarFlor(pos, eixo);
 }
 
-// botões agrupados no alto do centro, como no buquê de referência:
-// raios pequenos para ficarem juntinhos, alturas levemente diferentes
+// botões agrupados no alto, nos vãos entre as flores e bem acima das
+// pétalas, para não atravessarem nenhuma flor
 const configBotoes = [
-  { angulo: rnd(0.2, 1.0),  raio: rnd(0.35, 0.6),  altura: rnd(2.7, 2.95) },
-  { angulo: rnd(1.7, 2.5),  raio: rnd(0.45, 0.7),  altura: rnd(2.45, 2.7) },
-  { angulo: rnd(3.3, 4.1),  raio: rnd(0.35, 0.65), altura: rnd(2.8, 3.1) },
-  { angulo: rnd(4.8, 5.7),  raio: rnd(0.5, 0.75),  altura: rnd(2.3, 2.55) },
+  { angulo: 0    + rnd(-0.25, 0.25), raio: rnd(0.75, 1.0),  altura: rnd(3.05, 3.35) },
+  { angulo: 1.57 + rnd(-0.25, 0.25), raio: rnd(0.8, 1.15),  altura: rnd(2.85, 3.1) },
+  { angulo: 3.14 + rnd(-0.25, 0.25), raio: rnd(0.75, 1.05), altura: rnd(3.15, 3.45) },
+  { angulo: 4.71 + rnd(-0.25, 0.25), raio: rnd(0.85, 1.15), altura: rnd(2.9, 3.15) },
 ];
 for (const cfg of configBotoes) {
   const pos = new THREE.Vector3(
     Math.cos(cfg.angulo) * cfg.raio, cfg.altura, Math.sin(cfg.angulo) * cfg.raio
   );
   const eixo = new THREE.Vector3(
-    Math.cos(cfg.angulo) * rnd(0.1, 0.3), 1, Math.sin(cfg.angulo) * rnd(0.1, 0.3)
+    Math.cos(cfg.angulo) * rnd(0.25, 0.45), 1, Math.sin(cfg.angulo) * rnd(0.25, 0.45)
   );
   adicionarBotao(pos, eixo);
 }
@@ -801,6 +794,13 @@ for (let i = 0; i < 7; i++) {
   const a = rnd(0, Math.PI * 2);
   centrosMosquitinho.push(new THREE.Vector3(
     Math.cos(a) * rnd(0.6, 1.9), rnd(1.7, 2.6), Math.sin(a) * rnd(0.6, 1.9)
+  ));
+}
+// bem no alto do meio, despontando acima do buquê entre os botões
+for (let i = 0; i < 6; i++) {
+  const a = rnd(0, Math.PI * 2);
+  centrosMosquitinho.push(new THREE.Vector3(
+    Math.cos(a) * rnd(0.2, 1.0), rnd(2.6, 3.4), Math.sin(a) * rnd(0.2, 1.0)
   ));
 }
 // meia-altura, entre as flores
