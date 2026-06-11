@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ramalhete de Lírios Rosa 3D</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 40%, #2a4a32 0%, #1a3322 45%, #0b1a10 100%);
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+
+  #cena {
+    position: fixed;
+    inset: 0;
+    display: block;
+  }
+
+  .titulo {
+    position: fixed;
+    top: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: #ffe9f2;
+    pointer-events: none;
+    z-index: 10;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+  }
+  .titulo h1 {
+    font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+    font-weight: normal;
+    letter-spacing: 0.12em;
+  }
+  .titulo p {
+    margin-top: 8px;
+    font-size: clamp(0.75rem, 1.6vw, 0.95rem);
+    letter-spacing: 0.08em;
+    color: #f3c6d8;
+    opacity: 0.85;
+  }
+
+  .bokeh {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(18px);
+    opacity: 0.18;
+    pointer-events: none;
+    animation: flutuar 14s ease-in-out infinite alternate;
+  }
+  @keyframes flutuar {
+    from { transform: translateY(0px); }
+    to   { transform: translateY(-40px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="titulo">
+  <h1>🌸 Ramalhete de Lírios Rosa 🌸</h1>
+  <p>Arraste para girar 360° &nbsp;•&nbsp; Role para aproximar</p>
+</div>
+
+<div class="bokeh" style="left:8%;  top:65%; width:120px; height:120px; background:#e8a0bf; animation-delay:0s;"></div>
+<div class="bokeh" style="left:85%; top:30%; width:90px;  height:90px;  background:#bde3a8; animation-delay:-4s;"></div>
+<div class="bokeh" style="left:75%; top:75%; width:140px; height:140px; background:#f0c4d8; animation-delay:-8s;"></div>
+<div class="bokeh" style="left:15%; top:20%; width:80px;  height:80px;  background:#a8d8b0; animation-delay:-11s;"></div>
+
+<canvas id="cena"></canvas>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from './vendor/OrbitControls.js';
+
+// ---------------------------------------------------------------- cena base
+const canvas = document.getElementById('cena');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 1.2, 10.5);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.enablePan = false;
+controls.minDistance = 5;
+controls.maxDistance = 18;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 1.1;
+
+// ------------------------------------------------------------------- luzes
+scene.add(new THREE.HemisphereLight(0xfff2f6, 0x2a4030, 1.4));
+
+const sol = new THREE.DirectionalLight(0xfff6ea, 2.0);
+sol.position.set(5, 8, 6);
+scene.add(sol);
+
+const contraluz = new THREE.DirectionalLight(0xd8e8ff, 0.5);
+contraluz.position.set(-5, 3, -6);
+scene.add(contraluz);
+
+const brilhoRosa = new THREE.PointLight(0xff9ec4, 0.6, 20);
+brilhoRosa.position.set(0, -3, 4);
+scene.add(brilhoRosa);
+
+// preenchimento frontal que acompanha a câmera, para iluminar o miolo das flores
+const preenchimento = new THREE.DirectionalLight(0xfff0f4, 1.1);
+camera.add(preenchimento);
+preenchimento.position.set(0, 1.5, 2);
+scene.add(camera);
+
+// -------------------------------------------------- textura da pétala (2D)
+function texturaPetala() {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 512;
+  const g = c.getContext('2d');
+
+  // fundo: gradiente rosa (base embaixo) para rosa-claro (ponta em cima)
+  const fundo = g.createLinearGradient(0, 512, 0, 0);
+  fundo.addColorStop(0.00, '#ec6fa6');
+  fundo.addColorStop(0.45, '#f49fc2');
+  fundo.addColorStop(0.85, '#fad0e0');
+  fundo.addColorStop(1.00, '#fde7f0');
+  g.fillStyle = fundo;
+  g.fillRect(0, 0, 256, 512);
+
+  // bordas brancas características do lírio
+  const bordas = g.createLinearGradient(0, 0, 256, 0);
+  bordas.addColorStop(0.00, 'rgba(255,250,252,0.95)');
+  bordas.addColorStop(0.18, 'rgba(255,250,252,0)');
+  bordas.addColorStop(0.82, 'rgba(255,250,252,0)');
+  bordas.addColorStop(1.00, 'rgba(255,250,252,0.95)');
+  g.fillStyle = bordas;
+  g.fillRect(0, 0, 256, 512);
+
+  // faixa central mais intensa
+  const faixa = g.createLinearGradient(0, 0, 256, 0);
+  faixa.addColorStop(0.00, 'rgba(219,57,123,0)');
+  faixa.addColorStop(0.42, 'rgba(219,57,123,0.35)');
+  faixa.addColorStop(0.50, 'rgba(205,42,110,0.45)');
+  faixa.addColorStop(0.58, 'rgba(219,57,123,0.35)');
+  faixa.addColorStop(1.00, 'rgba(219,57,123,0)');
+  g.fillStyle = faixa;
+  g.fillRect(0, 100, 256, 412);
+
+  // guia de néctar esverdeada na base
+  const nectar = g.createRadialGradient(128, 505, 5, 128, 505, 70);
+  nectar.addColorStop(0, 'rgba(206,220,140,0.9)');
+  nectar.addColorStop(1, 'rgba(206,220,140,0)');
+  g.fillStyle = nectar;
+  g.fillRect(58, 435, 140, 77);
+
+  // pintas escuras (sardas do lírio Stargazer)
+  for (let i = 0; i < 60; i++) {
+    const x = 128 + (Math.random() - 0.5) * 130;
+    const y = 512 - Math.random() * Math.random() * 330 - 30;
+    const r = 1.5 + Math.random() * 2.5;
+    g.fillStyle = Math.random() > 0.5 ? 'rgba(142,31,63,0.85)' : 'rgba(163,36,76,0.7)';
+    g.beginPath();
+    g.ellipse(x, y, r, r * 1.5, 0, 0, Math.PI * 2);
+    g.fill();
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function texturaFolha() {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 256;
+  const g = c.getContext('2d');
+  const fundo = g.createLinearGradient(0, 256, 0, 0);
+  fundo.addColorStop(0, '#2d6b30');
+  fundo.addColorStop(1, '#4a8c46');
+  g.fillStyle = fundo;
+  g.fillRect(0, 0, 128, 256);
+  g.strokeStyle = 'rgba(20,60,25,0.6)';
+  g.lineWidth = 3;
+  g.beginPath(); g.moveTo(64, 256); g.lineTo(64, 0); g.stroke();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+// ------------------------------------------- geometria paramétrica de pétala
+function geometriaPetala(comprimento, largura, arco, recurvo) {
+  const segU = 40, segV = 16;
+  const pos = [], uv = [], idx = [];
+
+  for (let i = 0; i <= segU; i++) {
+    const u = i / segU;
+    // perfil de largura: base estreita, mais larga no meio, ponta afilada
+    const w = largura * Math.pow(Math.sin(Math.PI * Math.pow(u, 0.72)), 0.85);
+    for (let j = 0; j <= segV; j++) {
+      const v = (j / segV) * 2 - 1;
+      const x = v * w * 0.5;
+      const z = u * comprimento;
+      // arqueia para cima e recurva a ponta para trás
+      let y = arco * Math.sin(Math.PI * u * 0.85) - recurvo * Math.pow(u, 3.2);
+      // canaleta: bordas levemente erguidas perto da base
+      y += 0.30 * w * v * v * (1 - u * 0.6);
+      pos.push(x, y, z);
+      uv.push(j / segV, u);
+    }
+  }
+
+  const linha = segV + 1;
+  for (let i = 0; i < segU; i++) {
+    for (let j = 0; j < segV; j++) {
+      const a = i * linha + j;
+      idx.push(a, a + linha, a + 1, a + 1, a + linha, a + linha + 1);
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+// ----------------------------------------------------------------- materiais
+const matPetala = new THREE.MeshStandardMaterial({
+  map: texturaPetala(),
+  side: THREE.DoubleSide,
+  roughness: 0.55,
+  metalness: 0.0,
+});
+const matFolha = new THREE.MeshStandardMaterial({
+  map: texturaFolha(),
+  side: THREE.DoubleSide,
+  roughness: 0.7,
+});
+const matFilamento = new THREE.MeshStandardMaterial({ color: 0xe8e4c9, roughness: 0.6 });
+const matAntera = new THREE.MeshStandardMaterial({ color: 0x6b2b1f, roughness: 0.8 });
+const matPistilo = new THREE.MeshStandardMaterial({ color: 0xd9e0b8, roughness: 0.6 });
+const matEstigma = new THREE.MeshStandardMaterial({ color: 0x5a2a33, roughness: 0.7 });
+const matCaule = new THREE.MeshStandardMaterial({ color: 0x3e7d3a, roughness: 0.75 });
+const matBotao = new THREE.MeshStandardMaterial({ color: 0xd8e2b0, roughness: 0.65 });
+const matBotaoRosa = new THREE.MeshStandardMaterial({ color: 0xe8b7c8, roughness: 0.6 });
+const matFita = new THREE.MeshStandardMaterial({ color: 0xe75480, roughness: 0.35, metalness: 0.1 });
+
+const geoPetalaExterna = geometriaPetala(2.15, 1.00, 0.95, 0.55);
+const geoPetalaInterna = geometriaPetala(1.95, 1.20, 1.05, 0.45);
+const geoFolha = geometriaPetala(1.35, 0.34, 0.40, 0.30);
+
+// ------------------------------------------------------------------ estames
+function criarEstame(angulo) {
+  const dir = new THREE.Vector3(Math.cos(angulo), 0, Math.sin(angulo));
+  const fim = dir.clone().multiplyScalar(0.78).setY(1.15);
+  const curva = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0.08, 0),
+    dir.clone().multiplyScalar(0.22).setY(0.55),
+    dir.clone().multiplyScalar(0.52).setY(0.95),
+    fim,
+  ]);
+  const filamento = new THREE.Mesh(new THREE.TubeGeometry(curva, 20, 0.022, 6), matFilamento);
+
+  const antera = new THREE.Mesh(new THREE.CapsuleGeometry(0.045, 0.17, 4, 8), matAntera);
+  antera.position.copy(fim);
+  const perp = new THREE.Vector3(-Math.sin(angulo), 0.2, Math.cos(angulo)).normalize();
+  antera.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), perp);
+
+  const g = new THREE.Group();
+  g.add(filamento, antera);
+  return g;
+}
+
+function criarPistilo() {
+  const curva = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0.05, 0),
+    new THREE.Vector3(0.05, 0.7, 0.03),
+    new THREE.Vector3(0.1, 1.35, 0.05),
+  ]);
+  const tubo = new THREE.Mesh(new THREE.TubeGeometry(curva, 16, 0.03, 6), matPistilo);
+  const estigma = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 8), matEstigma);
+  estigma.scale.set(1, 0.65, 1);
+  estigma.position.set(0.1, 1.37, 0.05);
+  const g = new THREE.Group();
+  g.add(tubo, estigma);
+  return g;
+}
+
+// --------------------------------------------------------------------- flor
+function criarFlor() {
+  const flor = new THREE.Group();
+
+  // 3 pétalas externas + 3 internas (intercaladas)
+  for (let k = 0; k < 3; k++) {
+    const suporte = new THREE.Group();
+    suporte.rotation.y = (k / 3) * Math.PI * 2;
+    const p = new THREE.Mesh(geoPetalaExterna, matPetala);
+    p.rotation.x = -0.42;
+    suporte.add(p);
+    flor.add(suporte);
+  }
+  for (let k = 0; k < 3; k++) {
+    const suporte = new THREE.Group();
+    suporte.rotation.y = (k / 3) * Math.PI * 2 + Math.PI / 3;
+    const p = new THREE.Mesh(geoPetalaInterna, matPetala);
+    p.rotation.x = -0.58;
+    suporte.add(p);
+    flor.add(suporte);
+  }
+
+  for (let k = 0; k < 6; k++) {
+    flor.add(criarEstame((k / 6) * Math.PI * 2 + 0.26 + Math.random() * 0.1));
+  }
+  flor.add(criarPistilo());
+
+  return flor;
+}
+
+// --------------------------------------------------------------------- botão
+function criarBotao(rosado) {
+  const pontos = [];
+  for (let i = 0; i <= 14; i++) {
+    const t = i / 14;
+    const r = 0.16 * Math.pow(Math.sin(Math.PI * Math.pow(t, 0.85)), 0.9) + 0.001;
+    pontos.push(new THREE.Vector2(r, t * 0.78));
+  }
+  const botao = new THREE.Mesh(
+    new THREE.LatheGeometry(pontos, 14),
+    rosado ? matBotaoRosa : matBotao
+  );
+  return botao;
+}
+
+// --------------------------------------------------------------------- caule
+function criarCaule(origem, destino, abertura) {
+  const meio1 = origem.clone().lerp(destino, 0.35);
+  meio1.x += abertura.x * 0.3;
+  meio1.z += abertura.z * 0.3;
+  const meio2 = origem.clone().lerp(destino, 0.7);
+  meio2.x += abertura.x * 0.15;
+  meio2.z += abertura.z * 0.15;
+  const curva = new THREE.CatmullRomCurve3([origem, meio1, meio2, destino]);
+  const caule = new THREE.Mesh(new THREE.TubeGeometry(curva, 24, 0.045, 8), matCaule);
+  return { caule, curva };
+}
+
+function criarFolhaNoCaule(curva, t) {
+  const folha = new THREE.Mesh(geoFolha, matFolha);
+  folha.position.copy(curva.getPoint(t));
+  folha.rotation.y = Math.random() * Math.PI * 2;
+  folha.rotation.x = -0.25 - Math.random() * 0.3;
+  return folha;
+}
+
+// ---------------------------------------------------------------- ramalhete
+const ramalhete = new THREE.Group();
+const pontoAmarra = new THREE.Vector3(0, -2.7, 0);
+
+function adicionarFlor(posicao, eixo) {
+  const flor = criarFlor();
+  flor.position.copy(posicao);
+  flor.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), eixo.clone().normalize());
+  flor.rotateY(Math.random() * Math.PI * 2);
+  ramalhete.add(flor);
+
+  const base = posicao.clone().addScaledVector(eixo.clone().normalize(), -0.15);
+  const { caule, curva } = criarCaule(pontoAmarra.clone(), base, posicao);
+  ramalhete.add(caule);
+  ramalhete.add(criarFolhaNoCaule(curva, 0.45));
+  ramalhete.add(criarFolhaNoCaule(curva, 0.68));
+}
+
+function adicionarBotao(posicao, eixo, rosado) {
+  const botao = criarBotao(rosado);
+  botao.position.copy(posicao);
+  botao.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), eixo.clone().normalize());
+  ramalhete.add(botao);
+
+  const { caule, curva } = criarCaule(pontoAmarra.clone(), posicao.clone(), posicao);
+  ramalhete.add(caule);
+  ramalhete.add(criarFolhaNoCaule(curva, 0.55));
+}
+
+// flor central voltada para cima
+adicionarFlor(new THREE.Vector3(0, 1.45, 0), new THREE.Vector3(0, 1, 0));
+
+// 4 flores ao redor, inclinadas para fora
+for (let k = 0; k < 4; k++) {
+  const a = (k / 4) * Math.PI * 2 + Math.PI / 4;
+  const pos = new THREE.Vector3(Math.cos(a) * 1.95, 0.55, Math.sin(a) * 1.95);
+  const eixo = new THREE.Vector3(Math.cos(a) * 0.8, 0.85, Math.sin(a) * 0.8);
+  adicionarFlor(pos, eixo);
+}
+
+// 3 botões mais altos
+const angulosBotao = [0.5, 2.6, 4.6];
+angulosBotao.forEach((a, i) => {
+  const pos = new THREE.Vector3(Math.cos(a) * 1.15, 2.05, Math.sin(a) * 1.15);
+  const eixo = new THREE.Vector3(Math.cos(a) * 0.35, 1, Math.sin(a) * 0.35);
+  adicionarBotao(pos, eixo, i === 1);
+});
+
+// laço de fita no ponto de amarra
+const fita = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.085, 10, 24), matFita);
+fita.position.copy(pontoAmarra);
+fita.rotation.x = Math.PI / 2;
+ramalhete.add(fita);
+
+for (const lado of [-1, 1]) {
+  const tira = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.0, 0.015), matFita);
+  tira.position.set(pontoAmarra.x + lado * 0.16, pontoAmarra.y - 0.5, 0.05 * lado);
+  tira.rotation.z = lado * 0.18;
+  ramalhete.add(tira);
+}
+
+ramalhete.position.y = 0.2;
+scene.add(ramalhete);
+
+// ---------------------------------------------------------------- animação
+const relogio = new THREE.Clock();
+
+function animar() {
+  requestAnimationFrame(animar);
+  const t = relogio.getElapsedTime();
+
+  // ramalhete flutuando suavemente no ar
+  ramalhete.position.y = 0.2 + Math.sin(t * 0.8) * 0.14;
+  ramalhete.rotation.z = Math.sin(t * 0.5) * 0.025;
+  ramalhete.rotation.x = Math.cos(t * 0.6) * 0.02;
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+animar();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
