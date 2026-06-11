@@ -23,7 +23,7 @@
 
   .titulo {
     position: fixed;
-    top: 28px;
+    top: 10%;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
@@ -98,7 +98,7 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 1.0, 11.5);
+camera.position.set(0, 0.6, 12.8);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 0, 0);
@@ -851,7 +851,7 @@ const luzInterna = new THREE.PointLight(0xffe6c4, 1.4, 7);
 luzInterna.position.set(0, -0.4, 0);
 ramalhete.add(luzInterna);
 
-ramalhete.position.y = 0.2;
+ramalhete.position.y = -0.2;
 scene.add(ramalhete);
 
 // ---------------------------------------------------------------- animação
@@ -862,7 +862,7 @@ function animar() {
   const t = relogio.getElapsedTime();
 
   // ramalhete flutuando suavemente no ar
-  ramalhete.position.y = 0.2 + Math.sin(t * 0.8) * 0.14;
+  ramalhete.position.y = -0.2 + Math.sin(t * 0.8) * 0.14;
   ramalhete.rotation.z = Math.sin(t * 0.5) * 0.025;
   ramalhete.rotation.x = Math.cos(t * 0.6) * 0.02;
 
