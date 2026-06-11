@@ -679,11 +679,12 @@ function criarMosquitinhos(grupo, centros) {
   grupo.add(hastes);
 }
 
-// raminhos verdes finos e soltos, dando o ar despenteado do buquê
-function criarRaminho(grupo, pontoAmarra) {
+// raminhos verdes finos e soltos, dando o ar despenteado do buquê;
+// os curtos preenchem o miolo, os longos escapam para fora
+function criarRaminho(grupo, pontoAmarra, curto) {
   const a = rnd(0, Math.PI * 2);
-  const alcance = rnd(1.4, 2.7);
-  const topo = rnd(1.6, 3.0);
+  const alcance = curto ? rnd(0.4, 1.3) : rnd(1.4, 2.7);
+  const topo = curto ? rnd(1.4, 2.3) : rnd(1.6, 3.0);
   const curva = new THREE.CatmullRomCurve3([
     pontoAmarra.clone().add(new THREE.Vector3(0, 0.3, 0)),
     new THREE.Vector3(Math.cos(a) * alcance * 0.35, topo * 0.45, Math.sin(a) * alcance * 0.35),
@@ -786,14 +787,30 @@ ramalhete.add(criarCamadaEmbalagem(matKraftInterno, 0.88, rnd(0.4, 0.9), -0.5));
 // amarração de ráfia
 criarRafia(ramalhete, pontoAmarra);
 
-// mosquitinhos entre as flores e pela borda do papel
+// mosquitinhos por todo o buquê: miolo, nível dos lírios, meia-altura e borda
 const centrosMosquitinho = [];
+// preenchendo o miolo entre os caules
+for (let i = 0; i < 10; i++) {
+  const a = rnd(0, Math.PI * 2);
+  centrosMosquitinho.push(new THREE.Vector3(
+    Math.cos(a) * rnd(0.15, 1.4), rnd(0.9, 1.9), Math.sin(a) * rnd(0.15, 1.4)
+  ));
+}
+// no nível dos lírios e acima, aparecendo entre as pétalas
+for (let i = 0; i < 7; i++) {
+  const a = rnd(0, Math.PI * 2);
+  centrosMosquitinho.push(new THREE.Vector3(
+    Math.cos(a) * rnd(0.6, 1.9), rnd(1.7, 2.6), Math.sin(a) * rnd(0.6, 1.9)
+  ));
+}
+// meia-altura, entre as flores
 for (let i = 0; i < 9; i++) {
   const a = rnd(0, Math.PI * 2);
   centrosMosquitinho.push(new THREE.Vector3(
     Math.cos(a) * rnd(1.0, 2.2), rnd(0.8, 1.9), Math.sin(a) * rnd(1.0, 2.2)
   ));
 }
+// pela borda do papel
 for (let i = 0; i < 5; i++) {
   const a = rnd(0, Math.PI * 2);
   centrosMosquitinho.push(new THREE.Vector3(
@@ -802,8 +819,32 @@ for (let i = 0; i < 5; i++) {
 }
 criarMosquitinhos(ramalhete, centrosMosquitinho);
 
-// raminhos verdes soltos
+// folhagem verde preenchendo o miolo do buquê, sem deixar vazio entre os caules
+for (let i = 0; i < 18; i++) {
+  const a = rnd(0, Math.PI * 2);
+  const raio = rnd(0.15, 1.6);
+  const geo = geometriaPetala({
+    comprimento: rnd(0.9, 1.8),
+    largura: 0.34 * rnd(0.9, 1.5),
+    arco: rnd(0.35, 0.6),
+    recurvo: rnd(0.2, 0.5),
+    torcao: rnd(-0.35, 0.35),
+    ondulacao: rnd(0.02, 0.06),
+    assimetria: rnd(-0.05, 0.05),
+    canaleta: rnd(0.2, 0.32),
+    dobraBorda: rnd(0.02, 0.08),
+  });
+  const folha = new THREE.Mesh(geo, escolher(materiaisFolha));
+  folha.position.set(Math.cos(a) * raio, rnd(0.1, 1.4), Math.sin(a) * raio);
+  folha.rotation.y = a + rnd(-0.6, 0.6);
+  folha.rotation.x = -rnd(0.1, 0.75);
+  folha.rotation.z = rnd(-0.2, 0.2);
+  ramalhete.add(folha);
+}
+
+// raminhos verdes soltos: longos para fora e curtos preenchendo o miolo
 for (let i = 0; i < 9; i++) criarRaminho(ramalhete, pontoAmarra);
+for (let i = 0; i < 7; i++) criarRaminho(ramalhete, pontoAmarra, true);
 
 // luz quente dentro do cone para o papel não ficar em sombra fechada
 const luzInterna = new THREE.PointLight(0xffe6c4, 1.4, 7);
