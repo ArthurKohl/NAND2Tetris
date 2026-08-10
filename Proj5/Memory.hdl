@@ -1,0 +1,52 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/5/Memory.hdl
+/**
+ * The complete address space of the Hack computer's memory,
+ * including RAM and memory-mapped I/O. 
+ * The chip facilitates read and write operations, as follows:
+ *     Read:  out(t) = Memory[address(t)](t)
+ *     Write: if load(t-1) then Memory[address(t-1)](t) = in(t-1)
+ * In words: the chip always outputs the value stored at the memory 
+ * location specified by address. If load=1, the in value is loaded 
+ * into the memory location specified by address. This value becomes 
+ * available through the out output from the next time step onward.
+ * Address space rules:
+ * Only the upper 16K+8K+1 words of the Memory chip are used. 
+ * Access to address>0x6000 is invalid and reads 0. Access to any address
+ * in the range 0x4000-0x5FFF results in accessing the screen memory 
+ * map. Access to address 0x6000 results in accessing the keyboard 
+ * memory map. The behavior in these addresses is described in the Screen
+ * and Keyboard chip specifications given in the lectures and the book.
+ */
+
+CHIP Memory {
+    IN in[16], load, address[15];
+    OUT out[16];
+
+    PARTS:
+    // 1. DIVISÃO DO LOAD (ESCRITA)
+    // Usamos os dois bits mais significativos: address[13] e address[14]
+    // address[14]=0 -> RAM16K (endereços de 0 a 16383)
+    // address[14]=1 e address[13]=0 -> Screen (endereços de 16384 a 24575)
+    // address[14]=1 e address[13]=1 -> Keyboard (endereço 24576)
+    DMux4Way(in=load, sel=address[13..14], a=loadRam1, b=loadRam2, c=loadScreen, d=loadKbd);
+
+    // Junta os dois sinais da RAM, pois a RAM ocupa os dois primeiros quadrantes (00 e 01)
+    Or(a=loadRam1, b=loadRam2, out=loadRam);
+
+    // 2. OS CHIPS DE MEMÓRIA FÍSICA
+    // RAM16K usa 14 bits de endereço (address[0..13])
+    RAM16K(in=in, load=loadRam, address=address[0..13], out=ramOut);
+
+    // Screen usa 13 bits de endereço (address[0..12])
+    Screen(in=in, load=loadScreen, address=address[0..12], out=screenOut);
+
+    // Keyboard não recebe 'in' nem 'load', ele apenas cospe o código da tecla
+    Keyboard(out=kbdOut);
+
+    // 3. SELEÇÃO DA SAÍDA (LEITURA)
+    // Usa os mesmos dois bits mais altos para decidir qual dado vai para o processador
+    Mux4Way16(a=ramOut, b=ramOut, c=screenOut, d=kbdOut, sel=address[13..14], out=out);
+}
